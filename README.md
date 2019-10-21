@@ -42,9 +42,15 @@ Do as I say, not as I do!
 
 ## Limitations
 
-For now, the functions that are returned by `DynLib.get` are all unary,
-meaning that they only take one argument. If you have an idea how to encode
-function with a variable number of arguments in the type system, hit me up!
+For now, the functions that are returned by `DynLib.get` are all typed as `a`,
+so that we are able to encode multi-arity functions (i.e. functions with
+different numbers of arguments). I’m not aware of a better way to encode this
+in the Carp type system as of yet. If there is, hit me up, because the current
+implementation breaks all type-level guarantees!
+
+I’m also pretty sure that the lambdas allocated by `DynLib_dlopen` are never
+freed—because they’re returned as references—, and I’m not sure how to get
+around that!
 
 <hr/>
 

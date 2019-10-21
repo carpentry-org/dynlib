@@ -8,7 +8,7 @@
   (register global Int "RTLD_GLOBAL")
   (register local Int "RTLD_LOCAL")
   (register dlopen (Fn [(Ptr Char) Int] Lib) "dlopen")
-  (register dlsym (Fn [Lib (Ptr Char)] (Ref (Fn [a] b))) "DynLib_dlsym")
+  (register dlsym (Fn [Lib (Ptr Char)] (Ref a)) "DynLib_dlsym")
   (register dlclose (Fn [Lib] Int) "dlclose")
   (register dlerror (Fn [] String) "dlerror")
   (register valid? (Fn [a] Bool) "DynLib_isvalid")
