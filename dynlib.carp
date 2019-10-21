@@ -1,0 +1,32 @@
+(system-include "dlfcn.h")
+(relative-include "dlfcn_helper.h")
+
+(defmodule DynLib
+  (register-type Lib)
+  (register lazy Int "RTLD_LAZY")
+  (register now Int "RTLD_NOW")
+  (register global Int "RTLD_GLOBAL")
+  (register local Int "RTLD_LOCAL")
+  (register dlopen (Fn [(Ptr Char) Int] Lib) "dlopen")
+  (register dlsym (Fn [Lib (Ptr Char)] (Ref (Fn [a] b))) "DynLib_dlsym")
+  (register dlclose (Fn [Lib] Int) "dlclose")
+  (register dlerror (Fn [] String) "dlerror")
+  (register valid? (Fn [a] Bool) "DynLib_isvalid")
+
+  (defn open [lib]
+    (let [l (dlopen (cstr lib) lazy)]
+      (if (valid? l)
+        (Maybe.Just l)
+        (Maybe.Nothing))))
+
+  (defn get [lib fname]
+    (let [f (dlsym lib (cstr fname))]
+      (if (valid? f)
+        (Maybe.Just @f)
+        (Maybe.Nothing))))
+
+  (defn close [lib]
+    (if (= -1 (dlclose lib))
+      (Maybe.Just (dlerror))
+      (Maybe.Nothing)))
+)
