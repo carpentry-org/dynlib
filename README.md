@@ -9,7 +9,7 @@ Provided there is a function `inc` that increments a number in a library
 directory—, you can look up and call this function at runtime as follows:
 
 ```clojure
-(load "https://github.com/carpentry-org/dynlib@0.0.1")
+(load "https://github.com/carpentry-org/dynlib@0.0.2")
 
 (defn main []
   (println*
@@ -25,7 +25,7 @@ optional. If you want to throw safety out of the window, something like this
 could also work—though I wholeheartedly advise against it:
 
 ```clojure
-(load "https://github.com/carpentry-org/dynlib@0.0.1")
+(load "https://github.com/carpentry-org/dynlib@0.0.2")
 
 (defn main []
   (let [lib (Maybe.unsafe-from (DynLib.open "libt.so"))
