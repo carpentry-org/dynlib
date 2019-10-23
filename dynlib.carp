@@ -25,6 +25,13 @@
         (Maybe.Just @f)
         (Maybe.Nothing))))
 
+  (defn get-from-module [lib md fname]
+    (let [fqn (fmt "%s_%s" &(Pattern.substitute #"\." md "_" -1) fname)
+          f (dlsym lib (cstr &fqn))]
+      (if (valid? f)
+        (Maybe.Just @f)
+        (Maybe.Nothing))))
+
   (defn close [lib]
     (if (= -1 (dlclose lib))
       (Maybe.Just (dlerror))

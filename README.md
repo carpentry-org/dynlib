@@ -5,8 +5,9 @@ Dynamic library loading for Carp, based on [`dlfcn.h`](https://pubs.opengroup.or
 ## Usage
 
 Provided there is a function `inc` that increments a number in a library
-`libt.so`—and in fact this is exactly the example provided in the `examples`
-directory—, you can look up and call this function at runtime as follows:
+`libt.so`—and in fact this is exactly the C to Carp example provided in the
+`examples` directory—, you can look up and call this function at runtime as
+follows:
 
 ```clojure
 (load "https://github.com/carpentry-org/dynlib@0.0.2")

@@ -1,0 +1,7 @@
+(Project.config "title" "libt.so")
+(Project.config "output-directory" "./")
+
+(defmodule Shared
+  (defn add [a b]
+    (Int.+ a b))
+)
