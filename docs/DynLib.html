@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="content">
+            <div class="logo">
+                <a href="http://github.com/carp-lang/Carp">
+                    <img src="logo.png">
+                </a>
+                <div class="title">
+                    dynlib
+                </div>
+                <div class="index">
+                    <ul>
+                        <li>
+                            <a href="DynLib.html">
+                                DynLib
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <h1>
+                DynLib
+            </h1>
+            <div class="module-description">
+                <p>DynLib is a module for loading shared libraries at runtime. It
+strives to make code loading and calling dynamically easy.</p>
+<pre><code>(load &quot;https://github.com/carpentry-org/dynlib@0.0.3&quot;)
+
+(defn main []
+  (println*
+    &amp;(=&gt; (DynLib.open &quot;libt.so&quot;)
+         (Maybe.to-result @&quot;Couldn’t open libt.so&quot;)
+         (Result.and-then
+           (fn [lib] (Maybe.to-result (DynLib.get lib &quot;inc&quot;) @&quot;Couldn’t load symbol inc&quot;)))
+         (Result.map (fn [f] (Int.str (f 1)))))))
+</code></pre>
+
+            </div>
+            <div class="binder">
+                <a class="anchor" href="#close">
+                    <h3 id="close">
+                        close
+                    </h3>
+                </a>
+                <div class="description">
+                    defn
+                </div>
+                <p class="sig">
+                    (λ [Lib] (Maybe String))
+                </p>
+                <pre class="args">
+                    (close lib)
+                </pre>
+                <p class="doc">
+                    <p>closes a library <code>lib</code>. Either returns nothing or, if an error
+occurs, it returns the error message.</p>
+
+                </p>
+            </div>
+            <div class="binder">
+                <a class="anchor" href="#get">
+                    <h3 id="get">
+                        get
+                    </h3>
+                </a>
+                <div class="description">
+                    defn
+                </div>
+                <p class="sig">
+                    (λ [Lib, &amp;String] (Maybe a))
+                </p>
+                <pre class="args">
+                    (get lib fname)
+                </pre>
+                <p class="doc">
+                    <p>gets a function named <code>fname</code> from a Carp module <code>md</code> from inside
+a shared library <code>lib</code>.</p>
+
+                </p>
+            </div>
+            <div class="binder">
+                <a class="anchor" href="#get-from-module">
+                    <h3 id="get-from-module">
+                        get-from-module
+                    </h3>
+                </a>
+                <div class="description">
+                    defn
+                </div>
+                <p class="sig">
+                    (λ [Lib, &amp;String, a] (Maybe b))
+                </p>
+                <pre class="args">
+                    (get-from-module lib md fname)
+                </pre>
+                <p class="doc">
+                    
+                </p>
+            </div>
+            <div class="binder">
+                <a class="anchor" href="#open">
+                    <h3 id="open">
+                        open
+                    </h3>
+                </a>
+                <div class="description">
+                    defn
+                </div>
+                <p class="sig">
+                    (λ [&amp;String] (Maybe Lib))
+                </p>
+                <pre class="args">
+                    (open lib)
+                </pre>
+                <p class="doc">
+                    <p>opens a shared library <code>lib</code>.</p>
+
+                </p>
+            </div>
+        </div>
+    </body>
+</html>

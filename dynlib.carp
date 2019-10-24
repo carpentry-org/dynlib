@@ -1,30 +1,58 @@
 (system-include "dlfcn.h")
 (relative-include "dlfcn_helper.h")
 
+(doc DynLib "DynLib is a module for loading shared libraries at runtime. It
+strives to make code loading and calling dynamically easy.
+
+```
+(load \"https://github.com/carpentry-org/dynlib@0.0.3\")
+
+(defn main []
+  (println*
+    &(=> (DynLib.open \"libt.so\")
+         (Maybe.to-result @\"Couldn’t open libt.so\")
+         (Result.and-then
+           (fn [lib] (Maybe.to-result (DynLib.get lib \"inc\")
+                              @\"Couldn’t load symbol inc\")))
+         (Result.map (fn [f] (Int.str (f 1)))))))
+```")
 (defmodule DynLib
   (register-type Lib)
+  (hidden lazy)
   (register lazy Int "RTLD_LAZY")
+  (hidden now)
   (register now Int "RTLD_NOW")
+  (hidden global)
   (register global Int "RTLD_GLOBAL")
+  (hidden local)
   (register local Int "RTLD_LOCAL")
+  (hidden dlopen)
   (register dlopen (Fn [(Ptr Char) Int] Lib) "dlopen")
+  (hidden dlsym)
   (register dlsym (Fn [Lib (Ptr Char)] (Ref a)) "DynLib_dlsym")
+  (hidden dlclose)
   (register dlclose (Fn [Lib] Int) "dlclose")
+  (hidden dlerror)
   (register dlerror (Fn [] String) "dlerror")
+  (hidden valid?)
   (register valid? (Fn [a] Bool) "DynLib_isvalid")
 
+  (doc open "opens a shared library `lib`.")
   (defn open [lib]
     (let [l (dlopen (cstr lib) lazy)]
       (if (valid? l)
         (Maybe.Just l)
         (Maybe.Nothing))))
 
+  (doc get "gets a function named `fname` from a shared library `lib`.")
   (defn get [lib fname]
     (let [f (dlsym lib (cstr fname))]
       (if (valid? f)
         (Maybe.Just @f)
         (Maybe.Nothing))))
 
+  (doc get "gets a function named `fname` from a Carp module `md` from inside
+a shared library `lib`.")
   (defn get-from-module [lib md fname]
     (let [fqn (fmt "%s_%s" &(Pattern.substitute #"\." md "_" -1) fname)
           f (dlsym lib (cstr &fqn))]
@@ -32,6 +60,8 @@
         (Maybe.Just @f)
         (Maybe.Nothing))))
 
+  (doc close "closes a library `lib`. Either returns nothing or, if an error
+occurs, it returns the error message.")
   (defn close [lib]
     (if (= -1 (dlclose lib))
       (Maybe.Just (dlerror))
