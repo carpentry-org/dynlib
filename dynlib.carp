@@ -66,4 +66,9 @@ occurs, it returns the error message.")
     (if (= -1 (dlclose lib))
       (Maybe.Just (dlerror))
       (Maybe.Nothing)))
+
+  (defmacro rebind [lib s]
+    (list 'match (list 'DynLib.get lib (str s))
+      '(Maybe.Nothing) (list 'IO.errorln (String.join ["Failed to find symbol " (str s)]))
+      '(Maybe.Just s) (list set! s 's)))
 )
