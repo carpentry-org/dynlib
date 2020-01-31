@@ -51,7 +51,7 @@ strives to make code loading and calling dynamically easy.
         (Maybe.Just @f)
         (Maybe.Nothing))))
 
-  (doc get "gets a function named `fname` from a Carp module `md` from inside
+  (doc get-from-module "gets a function named `fname` from a Carp module `md` from inside
 a shared library `lib`.")
   (defn get-from-module [lib md fname]
     (let [fqn (fmt "%s_%s" &(Pattern.substitute #"\." md "_" -1) fname)

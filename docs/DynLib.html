@@ -38,7 +38,8 @@ strives to make code loading and calling dynamically easy.</p>
     &amp;(=&gt; (DynLib.open &quot;libt.so&quot;)
          (Maybe.to-result @&quot;Couldn’t open libt.so&quot;)
          (Result.and-then
-           (fn [lib] (Maybe.to-result (DynLib.get lib &quot;inc&quot;) @&quot;Couldn’t load symbol inc&quot;)))
+           (fn [lib] (Maybe.to-result (DynLib.get lib &quot;inc&quot;)
+                              @&quot;Couldn’t load symbol inc&quot;)))
          (Result.map (fn [f] (Int.str (f 1)))))))
 </code></pre>
 
@@ -80,8 +81,7 @@ occurs, it returns the error message.</p>
                     (get lib fname)
                 </pre>
                 <p class="doc">
-                    <p>gets a function named <code>fname</code> from a Carp module <code>md</code> from inside
-a shared library <code>lib</code>.</p>
+                    <p>gets a function named <code>fname</code> from a shared library <code>lib</code>.</p>
 
                 </p>
             </div>
@@ -101,7 +101,9 @@ a shared library <code>lib</code>.</p>
                     (get-from-module lib md fname)
                 </pre>
                 <p class="doc">
-                    
+                    <p>gets a function named <code>fname</code> from a Carp module <code>md</code> from inside
+a shared library <code>lib</code>.</p>
+
                 </p>
             </div>
             <div class="binder">
@@ -122,6 +124,25 @@ a shared library <code>lib</code>.</p>
                 <p class="doc">
                     <p>opens a shared library <code>lib</code>.</p>
 
+                </p>
+            </div>
+            <div class="binder">
+                <a class="anchor" href="#rebind">
+                    <h3 id="rebind">
+                        rebind
+                    </h3>
+                </a>
+                <div class="description">
+                    macro
+                </div>
+                <p class="sig">
+                    Macro
+                </p>
+                <pre class="args">
+                    (rebind lib s)
+                </pre>
+                <p class="doc">
+                    
                 </p>
             </div>
         </div>
