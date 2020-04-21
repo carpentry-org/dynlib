@@ -1,8 +1,8 @@
-(load "../dynlib.carp")
+(load "../../dynlib.carp")
 
 (defn main []
   (println*
     &(=> (DynLib.open "libt.so")
          (Maybe.to-result @"Couldn’t open libt.so")
-         (Result.and-then (fn [lib] (Maybe.to-result (DynLib.get lib "add") @"Couldn’t load symbol")))
-         (Result.map (fn [f] (Int.str (f 1 2)))))))
+         (Result.and-then &(fn [lib] (Maybe.to-result (DynLib.get lib "add") @"Couldn’t load symbol")))
+         (Result.map &(fn [f] (Int.str (f 1 2)))))))
