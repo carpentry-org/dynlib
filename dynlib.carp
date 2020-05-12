@@ -5,7 +5,7 @@
 strives to make code loading and calling dynamically easy.
 
 ```
-(load \"https://github.com/carpentry-org/dynlib@0.0.3\")
+(load \"https://github.com/carpentry-org/dynlib@0.0.4\")
 
 (defn main []
   (println*
@@ -27,9 +27,9 @@ strives to make code loading and calling dynamically easy.
   (hidden local)
   (register local Int "RTLD_LOCAL")
   (hidden dlopen)
-  (register dlopen (Fn [(Ptr Char) Int] Lib) "dlopen")
+  (register dlopen (Fn [(Ptr CChar) Int] Lib) "dlopen")
   (hidden dlsym)
-  (register dlsym (Fn [Lib (Ptr Char)] (Ref a)) "DynLib_dlsym")
+  (register dlsym (Fn [Lib (Ptr CChar)] (Ref a)) "DynLib_dlsym")
   (hidden dlclose)
   (register dlclose (Fn [Lib] Int) "dlclose")
   (hidden dlerror)

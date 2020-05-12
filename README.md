@@ -10,7 +10,7 @@ Provided there is a function `inc` that increments a number in a library
 follows:
 
 ```clojure
-(load "https://github.com/carpentry-org/dynlib@0.0.3")
+(load "https://github.com/carpentry-org/dynlib@0.0.4")
 
 (defn main []
   (println*
