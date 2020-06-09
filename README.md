@@ -37,7 +37,7 @@ could also work—though I wholeheartedly advise against it:
 This is equivalent to the above, but it will crash and burn if any of the
 assumptions cannot be fulfilled. Stay safe, folks!
 
-Both of the examples do not use `dlclose` to clean up the resource after
+Both of the examples do not use `DynLib.close` to clean up the resource after
 they are done—mostly for brevity’s sake—, but I’d really hope you’ll do that.
 Do as I say, not as I do!
 
@@ -49,7 +49,7 @@ different numbers of arguments). I’m not aware of a better way to encode this
 in the Carp type system as of yet. If there is, hit me up, because the current
 implementation breaks all type-level guarantees!
 
-I’m also pretty sure that the lambdas allocated by `DynLib_dlopen` are never
+I’m also pretty sure that the lambdas allocated by `DynLib_dlsym` are never
 freed—because they’re returned as references—, and I’m not sure how to get
 around that!
 
