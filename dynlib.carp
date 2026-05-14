@@ -40,35 +40,31 @@ strives to make code loading and calling dynamically easy.
   (doc open "opens a shared library `lib`.")
   (defn open [lib]
     (let [l (dlopen (cstr lib) lazy)]
-      (if (valid? l)
-        (Maybe.Just l)
-        (Maybe.Nothing))))
+      (if (valid? l) (Maybe.Just l) (Maybe.Nothing))))
 
   (doc get "gets a function named `fname` from a shared library `lib`.")
   (defn get [lib fname]
     (let [f (dlsym lib (cstr fname))]
-      (if (valid? f)
-        (Maybe.Just @f)
-        (Maybe.Nothing))))
+      (if (valid? f) (Maybe.Just @f) (Maybe.Nothing))))
 
-  (doc get-from-module "gets a function named `fname` from a Carp module `md` from inside
+  (doc get-from-module
+    "gets a function named `fname` from a Carp module `md` from inside
 a shared library `lib`.")
   (defn get-from-module [lib md fname]
     (let [fqn (fmt "%s_%s" &(Pattern.substitute #"\." md "_" -1) fname)
           f (dlsym lib (cstr &fqn))]
-      (if (valid? f)
-        (Maybe.Just @f)
-        (Maybe.Nothing))))
+      (if (valid? f) (Maybe.Just @f) (Maybe.Nothing))))
 
   (doc close "closes a library `lib`. Either returns nothing or, if an error
 occurs, it returns the error message.")
   (defn close [lib]
-    (if (= -1 (dlclose lib))
-      (Maybe.Just (dlerror))
-      (Maybe.Nothing)))
+    (if (= -1 (dlclose lib)) (Maybe.Just (dlerror)) (Maybe.Nothing)))
 
   (defmacro rebind [lib s]
-    (list 'match (list 'DynLib.get lib (str s))
-      '(Maybe.Nothing) (list 'IO.errorln (String.join ["Failed to find symbol " (str s)]))
-      '(Maybe.Just s) (list set! s 's)))
-)
+    (list
+      'match
+      (list 'DynLib.get lib (str s))
+      '(Maybe.Nothing)
+      (list 'IO.errorln (String.join ["Failed to find symbol " (str s)]))
+      '(Maybe.Just s)
+      (list set! s 's))))
