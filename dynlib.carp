@@ -35,7 +35,9 @@ strives to make code loading and calling dynamically easy.
   (register dlerror- (Fn [] (Ptr CChar)) "dlerror")
   (private dlerror)
   (hidden dlerror)
-  (defn dlerror [] (String.from-cstr (dlerror-)))
+  (defn dlerror []
+    (let [err (dlerror-)]
+      (if (valid? err) (String.from-cstr err) @"unknown error")))
   (hidden valid?)
   (register valid? (Fn [a] Bool) "DynLib_isvalid")
 
