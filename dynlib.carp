@@ -33,13 +33,13 @@ strives to make code loading and calling dynamically easy.
   (private dlerror-)
   (hidden dlerror-)
   (register dlerror- (Fn [] (Ptr CChar)) "dlerror")
+  (hidden valid?)
+  (register valid? (Fn [a] Bool) "DynLib_isvalid")
   (private dlerror)
   (hidden dlerror)
   (defn dlerror []
     (let [err (dlerror-)]
       (if (valid? err) (String.from-cstr err) @"unknown error")))
-  (hidden valid?)
-  (register valid? (Fn [a] Bool) "DynLib_isvalid")
 
   (doc open "opens a shared library `lib`. Returns a `Result` with the library
 handle on success, or the `dlerror` message on failure.")
