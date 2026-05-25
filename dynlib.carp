@@ -5,15 +5,13 @@
 strives to make code loading and calling dynamically easy.
 
 ```
-(load \"https://github.com/carpentry-org/dynlib@0.0.4\")
+(load \"https://github.com/carpentry-org/dynlib@0.0.5\")
 
 (defn main []
   (println*
     &(=> (DynLib.open \"libt.so\")
-         (Maybe.to-result @\"Couldn’t open libt.so\")
          (Result.and-then
-           (fn [lib] (Maybe.to-result (DynLib.get lib \"inc\")
-                              @\"Couldn’t load symbol inc\")))
+           (fn [lib] (DynLib.get lib \"inc\")))
          (Result.map (fn [f] (Int.str (f 1)))))))
 ```")
 (defmodule DynLib
@@ -32,28 +30,37 @@ strives to make code loading and calling dynamically easy.
   (register dlsym (Fn [Lib (Ptr CChar)] (Ref a)) "DynLib_dlsym")
   (hidden dlclose)
   (register dlclose (Fn [Lib] Int) "dlclose")
-  (hidden dlerror)
-  (register dlerror (Fn [] String) "dlerror")
+  (private dlerror-)
+  (hidden dlerror-)
+  (register dlerror- (Fn [] (Ptr CChar)) "dlerror")
   (hidden valid?)
   (register valid? (Fn [a] Bool) "DynLib_isvalid")
+  (private dlerror)
+  (hidden dlerror)
+  (defn dlerror []
+    (let [err (dlerror-)]
+      (if (valid? err) (String.from-cstr err) @"unknown error")))
 
-  (doc open "opens a shared library `lib`.")
+  (doc open "opens a shared library `lib`. Returns a `Result` with the library
+handle on success, or the `dlerror` message on failure.")
   (defn open [lib]
     (let [l (dlopen (cstr lib) lazy)]
-      (if (valid? l) (Maybe.Just l) (Maybe.Nothing))))
+      (if (valid? l) (Result.Success l) (Result.Error (dlerror)))))
 
-  (doc get "gets a function named `fname` from a shared library `lib`.")
+  (doc get "gets a function named `fname` from a shared library `lib`. Returns
+a `Result` with the function on success, or the `dlerror` message on failure.")
   (defn get [lib fname]
     (let [f (dlsym lib (cstr fname))]
-      (if (valid? f) (Maybe.Just @f) (Maybe.Nothing))))
+      (if (valid? f) (Result.Success @f) (Result.Error (dlerror)))))
 
   (doc get-from-module
     "gets a function named `fname` from a Carp module `md` from inside
-a shared library `lib`.")
+a shared library `lib`. Returns a `Result` with the function on success, or the
+`dlerror` message on failure.")
   (defn get-from-module [lib md fname]
     (let [fqn (fmt "%s_%s" &(Pattern.substitute #"\." md "_" -1) fname)
           f (dlsym lib (cstr &fqn))]
-      (if (valid? f) (Maybe.Just @f) (Maybe.Nothing))))
+      (if (valid? f) (Result.Success @f) (Result.Error (dlerror)))))
 
   (doc close "closes a library `lib`. Either returns nothing or, if an error
 occurs, it returns the error message.")
@@ -63,7 +70,7 @@ occurs, it returns the error message.")
   (defmacro rebind [lib s]
     (list 'match
           (list 'DynLib.get lib (str s))
-          '(Maybe.Nothing)
-          (list 'IO.errorln (String.join ["Failed to find symbol " (str s)]))
-          '(Maybe.Just s)
+          '(Result.Error e)
+          (list 'IO.errorln 'e)
+          '(Result.Success s)
           (list set! s 's))))

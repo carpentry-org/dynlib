@@ -10,27 +10,28 @@ Provided there is a function `inc` that increments a number in a library
 follows:
 
 ```clojure
-(load "https://github.com/carpentry-org/dynlib@0.0.4")
+(load "https://github.com/carpentry-org/dynlib@0.0.5")
 
 (defn main []
   (println*
     &(=> (DynLib.open "libt.so")
-         (Maybe.to-result @"Couldn’t open libt.so")
          (Result.and-then
-           (fn [lib] (Maybe.to-result (DynLib.get lib "inc") @"Couldn’t load symbol inc")))
+           (fn [lib] (DynLib.get lib "inc")))
          (Result.map (fn [f] (Int.str (f 1)))))))
 ```
 
-We’re using `Result` here to get informative error messages, but this is all
-optional. If you want to throw safety out of the window, something like this
-could also work—though I wholeheartedly advise against it:
+`open` and `get` return `(Result a String)`, so the error branch already
+carries the real `dlerror()` message—no need to wrap in `Maybe.to-result`.
+
+If you want to throw safety out of the window, something like this could also
+work—though I wholeheartedly advise against it:
 
 ```clojure
-(load "https://github.com/carpentry-org/dynlib@0.0.3")
+(load "https://github.com/carpentry-org/dynlib@0.0.5")
 
 (defn main []
-  (let [lib (Maybe.unsafe-from (DynLib.open "libt.so"))
-        f (Maybe.unsafe-from (DynLib.get lib "inc"))]
+  (let [lib (Result.unsafe-from-success (DynLib.open "libt.so"))
+        f (Result.unsafe-from-success (DynLib.get lib "inc"))]
     (println* &(Int.str (f 1)))))
 ```
 
