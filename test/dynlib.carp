@@ -1,0 +1,46 @@
+(load "../dynlib.carp")
+(load "Test.carp")
+(use Test)
+
+(defn main []
+  (with-test test
+    ; open succeeds for a real library
+    (assert-true test
+      (Result.success? &(DynLib.open "libm.so.6"))
+      "open succeeds for libm")
+
+    ; open fails for a nonexistent library
+    (assert-true test
+      (Result.error? &(DynLib.open "libnonexistent.so"))
+      "open fails for nonexistent library")
+
+    ; get succeeds for a known symbol
+    (let-do [lib (Result.unsafe-from-success (DynLib.open "libm.so.6"))
+             result (the (Result (Fn [Double] Double) String)
+                         (DynLib.get lib "floor"))
+             ok (Result.success? &result)]
+      (ignore result)
+      (ignore (DynLib.close lib))
+      (assert-true test ok "get succeeds for known symbol"))
+
+    ; get fails for a nonexistent symbol
+    (let-do [lib (Result.unsafe-from-success (DynLib.open "libm.so.6"))
+             result (the (Result (Fn [] ()) String)
+                         (DynLib.get lib "nonexistent_symbol_xyz"))
+             bad (Result.error? &result)]
+      (ignore result)
+      (ignore (DynLib.close lib))
+      (assert-true test bad "get fails for nonexistent symbol"))
+
+    ; close succeeds on a valid handle
+    (let [lib (Result.unsafe-from-success (DynLib.open "libm.so.6"))]
+      (assert-true test
+        (Result.success? &(DynLib.close lib))
+        "close succeeds on valid handle"))
+
+    ; close returns Result.Success () on success
+    (let [lib (Result.unsafe-from-success (DynLib.open "libm.so.6"))]
+      (assert-equal test
+        &(Result.Success ())
+        &(DynLib.close lib)
+        "close returns Result.Success on success"))))
