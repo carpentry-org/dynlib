@@ -62,10 +62,10 @@ a shared library `lib`. Returns a `Result` with the function on success, or the
           f (dlsym lib (cstr &fqn))]
       (if (valid? f) (Result.Success @f) (Result.Error (dlerror)))))
 
-  (doc close "closes a library `lib`. Either returns nothing or, if an error
-occurs, it returns the error message.")
+  (doc close "closes a library `lib`. Returns a `Result` with `()` on success,
+or the `dlerror` message on failure.")
   (defn close [lib]
-    (if (= -1 (dlclose lib)) (Maybe.Just (dlerror)) (Maybe.Nothing)))
+    (if (/= 0 (dlclose lib)) (Result.Error (dlerror)) (Result.Success ())))
 
   (defmacro rebind [lib s]
     (list 'match
