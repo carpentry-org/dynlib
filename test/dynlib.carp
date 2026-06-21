@@ -4,17 +4,14 @@
 
 (defn main []
   (with-test test
-    ; open succeeds for a real library
     (assert-true test
       (Result.success? &(DynLib.open "libm.so.6"))
       "open succeeds for libm")
 
-    ; open fails for a nonexistent library
     (assert-true test
       (Result.error? &(DynLib.open "libnonexistent.so"))
       "open fails for nonexistent library")
 
-    ; get succeeds for a known symbol
     (match (DynLib.open "libm.so.6")
       (Result.Success lib)
         (let-do [result (the (Result (Fn [Double] Double) String)
@@ -25,7 +22,6 @@
           (assert-true test ok "get succeeds for known symbol"))
       (Result.Error _) (assert-true test false "get succeeds for known symbol"))
 
-    ; get fails for a nonexistent symbol
     (match (DynLib.open "libm.so.6")
       (Result.Success lib)
         (let-do [result (the (Result (Fn [] ()) String)
@@ -37,7 +33,6 @@
       (Result.Error _)
         (assert-true test false "get fails for nonexistent symbol"))
 
-    ; close succeeds on a valid handle
     (match (DynLib.open "libm.so.6")
       (Result.Success lib)
         (assert-true test
@@ -45,7 +40,6 @@
           "close succeeds on valid handle")
       (Result.Error _) (assert-true test false "close succeeds on valid handle"))
 
-    ; close returns Result.Success () on success
     (match (DynLib.open "libm.so.6")
       (Result.Success lib)
         (assert-equal test
