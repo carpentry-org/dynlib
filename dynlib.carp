@@ -5,7 +5,7 @@
 strives to make code loading and calling dynamically easy.
 
 ```
-(load \"https://github.com/carpentry-org/dynlib@0.1.0\")
+(load \"https://github.com/carpentry-org/dynlib@0.2.0\")
 
 (defn main []
   (println*

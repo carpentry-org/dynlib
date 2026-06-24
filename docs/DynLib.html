@@ -32,7 +32,7 @@
                 <div class="module-description">
                     <p>DynLib is a module for loading shared libraries at runtime. It
 strives to make code loading and calling dynamically easy.</p>
-<pre><code>(load &quot;https://github.com/carpentry-org/dynlib@0.1.0&quot;)
+<pre><code>(load &quot;https://github.com/carpentry-org/dynlib@0.2.0&quot;)
 
 (defn main []
   (println*
@@ -53,14 +53,14 @@ strives to make code loading and calling dynamically easy.</p>
                         defn
                     </div>
                     <p class="sig">
-                        (Fn [Lib] (Maybe String))
+                        (Fn [Lib] (Result () String))
                     </p>
                     <pre class="args">
                         (close lib)
                     </pre>
                     <p class="doc">
-                        <p>closes a library <code>lib</code>. Either returns nothing or, if an error
-occurs, it returns the error message.</p>
+                        <p>closes a library <code>lib</code>. Returns a <code>Result</code> with <code>()</code> on success,
+or the <code>dlerror</code> message on failure.</p>
 
                     </p>
                 </div>

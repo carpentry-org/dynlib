@@ -10,7 +10,7 @@ Provided there is a function `inc` that increments a number in a library
 follows:
 
 ```clojure
-(load "https://github.com/carpentry-org/dynlib@0.1.0")
+(load "https://github.com/carpentry-org/dynlib@0.2.0")
 
 (defn main []
   (println*
@@ -27,7 +27,7 @@ If you want to throw safety out of the window, something like this could also
 work—though I wholeheartedly advise against it:
 
 ```clojure
-(load "https://github.com/carpentry-org/dynlib@0.1.0")
+(load "https://github.com/carpentry-org/dynlib@0.2.0")
 
 (defn main []
   (let [lib (Result.unsafe-from-success (DynLib.open "libt.so"))
