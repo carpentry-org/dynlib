@@ -74,3 +74,113 @@ or the `dlerror` message on failure.")
           (list 'IO.errorln 'e)
           '(Result.Success s)
           (list set! s 's))))
+
+;; Ownership-aware typed bindings. The original Lib/get API above is retained
+;; for compatibility, but it cannot relate a function's lifetime to its loader
+;; handle and DynLib_dlsym allocates its Lambda wrapper.
+(register-type DynLibOwned)
+(register-type DynLibPinned)
+
+(defmodule DynLibOwned
+  (register delete (Fn [DynLibOwned] ()) "DynLibOwned_delete")
+  (implements delete DynLibOwned.delete))
+
+(deftype (DynLibBoundFn a) [library DynLibOwned callable a])
+(deftype (DynLibPinnedFn a) [callable a])
+
+(defmodule DynLibBoundFn
+  (private library)
+  (private callable)
+  (defn call0 [bound]
+    (let [function (DynLibBoundFn.callable bound)] (~function)))
+  (defn call1 [bound a]
+    (let [function (DynLibBoundFn.callable bound)] (~function a)))
+  (defn call2 [bound a b]
+    (let [function (DynLibBoundFn.callable bound)] (~function a b)))
+  (defn call3 [bound a b c]
+    (let [function (DynLibBoundFn.callable bound)] (~function a b c)))
+  (defn call4 [bound a b c d]
+    (let [function (DynLibBoundFn.callable bound)] (~function a b c d)))
+  (defn call5 [bound a b c d e]
+    (let [function (DynLibBoundFn.callable bound)] (~function a b c d e)))
+  (defn call6 [bound a b c d e f]
+    (let [function (DynLibBoundFn.callable bound)] (~function a b c d e f)))
+  (defn call7 [bound a b c d e f g]
+    (let [function (DynLibBoundFn.callable bound)] (~function a b c d e f g)))
+  (defn call8 [bound a b c d e f g h]
+    (let [function (DynLibBoundFn.callable bound)] (~function a b c d e f g h))))
+
+(defmodule DynLibPinnedFn
+  (private callable)
+  (defn call0 [bound]
+    (let [function (DynLibPinnedFn.callable bound)] (~function)))
+  (defn call1 [bound a]
+    (let [function (DynLibPinnedFn.callable bound)] (~function a)))
+  (defn call2 [bound a b]
+    (let [function (DynLibPinnedFn.callable bound)] (~function a b)))
+  (defn call3 [bound a b c]
+    (let [function (DynLibPinnedFn.callable bound)] (~function a b c)))
+  (defn call4 [bound a b c d]
+    (let [function (DynLibPinnedFn.callable bound)] (~function a b c d)))
+  (defn call5 [bound a b c d e]
+    (let [function (DynLibPinnedFn.callable bound)] (~function a b c d e)))
+  (defn call6 [bound a b c d e f]
+    (let [function (DynLibPinnedFn.callable bound)] (~function a b c d e f)))
+  (defn call7 [bound a b c d e f g]
+    (let [function (DynLibPinnedFn.callable bound)] (~function a b c d e f g)))
+  (defn call8 [bound a b c d e f g h]
+    (let [function (DynLibPinnedFn.callable bound)] (~function a b c d e f g h))))
+
+(defmodule DynLib
+  (register open-owned- (Fn [&String] DynLibOwned) "DynLib_open_owned")
+  (register open-pinned- (Fn [&String] DynLibPinned) "DynLib_open_pinned")
+  (register valid-owned? (Fn [&DynLibOwned] Bool) "DynLib_valid_handle")
+  (register valid-pinned? (Fn [&DynLibPinned] Bool) "DynLib_valid_handle")
+  (register symbol-owned (Fn [&DynLibOwned &String] a) "DynLib_symbol_owned")
+  (register symbol-pinned (Fn [&DynLibPinned &String] a) "DynLib_symbol_pinned")
+  (register valid-function? (Fn [&a] Bool) "DynLib_valid_lambda")
+  (register typed-error (Fn [] String) "DynLib_error_string")
+  (hidden symbol-owned)
+  (hidden symbol-pinned)
+  (hidden valid-function?)
+
+  (doc open-owned "Opens a library whose handle must remain owned by one bound
+function. Dropping that function closes the handle.")
+  (defn open-owned [path]
+    (let [library (open-owned- path)]
+      (if (valid-owned? &library)
+        (Result.Success library)
+        (Result.Error (typed-error)))))
+
+  (doc open-pinned "Opens a process-lifetime library. It is intentionally not
+unloaded, so one borrowed handle can safely produce many bindings. Prefer this
+for Rust cdylibs, callbacks, thread-local state, or foreign code that can retain
+references into the library.")
+  (defn open-pinned [path]
+    (let [library (open-pinned- path)]
+      (if (valid-pinned? &library)
+        (Result.Success library)
+        (Result.Error (typed-error)))))
+
+  (doc defbinder "Defines a typed symbol binder for an owned library. The
+declared signature is an explicit assertion about the symbol's C ABI. The
+  result owns the library handle and cannot outlive it.")
+  (defmacro defbinder [name signature]
+    `(defn %name [library symbol]
+       (let [function (the %signature
+                           (DynLib.symbol-owned &library symbol))]
+         (if (DynLib.valid-function? &function)
+           (Result.Success (DynLibBoundFn.init library function))
+           (Result.Error (DynLib.typed-error))))))
+
+  (doc defpinned-binder "Defines a typed symbol binder for a pinned library.
+The declared signature is an explicit assertion about the symbol's C ABI. The
+binder only borrows the process-lifetime handle, allowing many symbols to be
+  bound from one library.")
+  (defmacro defpinned-binder [name signature]
+    `(defn %name [library symbol]
+       (let [function (the %signature
+                           (DynLib.symbol-pinned library symbol))]
+         (if (DynLib.valid-function? &function)
+           (Result.Success (DynLibPinnedFn.init function))
+           (Result.Error (DynLib.typed-error)))))))
