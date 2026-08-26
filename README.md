@@ -2,6 +2,47 @@
 
 Dynamic library loading for Carp, based on [`dlfcn.h`](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/dlfcn.h.html).
 
+## Typed, ownership-aware bindings
+
+For new code, define a binder with the exact C ABI signature and use either a
+pinned or owned library:
+
+```clojure
+(load "https://github.com/carpentry-org/dynlib@0.3.0")
+
+(DynLib.defpinned-binder bind-floor (Fn [Double] Double))
+
+(defn main []
+  (match (DynLib.open-pinned "libm.so.6")
+    (Result.Error error) (IO.errorln &error)
+    (Result.Success library)
+      (match (bind-floor &library "floor")
+        (Result.Error error) (IO.errorln &error)
+        (Result.Success floor)
+          (println* &(Double.str (DynLibPinnedFn.call1 &floor 3.9))))))
+```
+
+`open-pinned` intentionally keeps the loader handle alive for the process. Its
+binder only borrows the handle, so one library can supply many functions. This
+is the conservative choice for Rust `cdylib`s, callbacks, thread-local state,
+and libraries that may retain references to their own code.
+
+`open-owned` and `defbinder` instead transfer the handle into a
+`DynLibBoundFn`. Carp closes it when the bound function is dropped, so the
+function cannot outlive its library. This scoped form binds one function per
+handle; reopening the same path normally reuses the platform loader's existing
+image and increments its reference count.
+
+Call bound functions with `DynLibPinnedFn.call0` through `call8`, or the
+corresponding `DynLibBoundFn` functions. Lookup returns each `Lambda` by value
+and does not allocate a wrapper.
+
+The binder declaration is necessarily an assertion: `dlsym` exposes neither a
+portable type nor ABI reflection. Calling a symbol through a signature that
+does not exactly match its exported C ABI is undefined behavior. Binding
+generators should therefore emit these declarations from an authoritative API
+description rather than asking users to write them manually.
+
 ## Usage
 
 Provided there is a function `inc` that increments a number in a library
@@ -44,15 +85,14 @@ Do as I say, not as I do!
 
 ## Limitations
 
-For now, the functions that are returned by `DynLib.get` are all typed as `a`,
+The compatibility `DynLib.get` API returns functions typed as `a`,
 so that we are able to encode multi-arity functions (i.e. functions with
 different numbers of arguments). I’m not aware of a better way to encode this
-in the Carp type system as of yet. If there is, hit me up, because the current
-implementation breaks all type-level guarantees!
+in that API. Prefer the typed binders above, which confine the polymorphic raw
+lookup behind a generated concrete function signature.
 
-I’m also pretty sure that the lambdas allocated by `DynLib_dlsym` are never
-freed—because they’re returned as references—, and I’m not sure how to get
-around that!
+The compatibility lookup also allocates a `Lambda` wrapper that is not freed.
+The ownership-aware API returns the wrapper by value and avoids that leak.
 
 <hr/>
 
