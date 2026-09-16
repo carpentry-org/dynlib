@@ -1,0 +1,3 @@
+; the math symbols live in different libraries per platform: macos keeps them
+; in libSystem, glibc in libm.so.6.
+(defmacro libm-path [] (if mac-target? "/usr/lib/libSystem.B.dylib" "libm.so.6"))
