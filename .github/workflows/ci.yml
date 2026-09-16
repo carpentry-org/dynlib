@@ -19,6 +19,11 @@ jobs:
       - name: Setup Carp
         uses: carpentry-org/setup-carp@v1
 
+      - name: Run tests
+        run: |
+          carp -x test/dynlib.carp
+          carp -x test/typed.carp
+
       - name: Install angler
         run: |
           set -euo pipefail
