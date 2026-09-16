@@ -85,7 +85,8 @@ or the `dlerror` message on failure.")
   (register delete (Fn [DynLibOwned] ()) "DynLibOwned_delete")
   (implements delete DynLibOwned.delete))
 
-(deftype (DynLibBoundFn a) [library DynLibOwned callable a])
+(deftype (DynLibBoundFn a) [library DynLibOwned
+                            callable a])
 (deftype (DynLibPinnedFn a) [callable a])
 
 (defmodule DynLibBoundFn
@@ -167,11 +168,10 @@ declared signature is an explicit assertion about the symbol's C ABI. The
   result owns the library handle and cannot outlive it.")
   (defmacro defbinder [name signature]
     `(defn %name [library symbol]
-       (let [function (the %signature
-                           (DynLib.symbol-owned &library symbol))]
-         (if (DynLib.valid-function? &function)
-           (Result.Success (DynLibBoundFn.init library function))
-           (Result.Error (DynLib.typed-error))))))
+      (let [function (the %signature (DynLib.symbol-owned &library symbol))]
+        (if (DynLib.valid-function? &function)
+          (Result.Success (DynLibBoundFn.init library function))
+          (Result.Error (DynLib.typed-error))))))
 
   (doc defpinned-binder "Defines a typed symbol binder for a pinned library.
 The declared signature is an explicit assertion about the symbol's C ABI. The
@@ -179,8 +179,7 @@ binder only borrows the process-lifetime handle, allowing many symbols to be
   bound from one library.")
   (defmacro defpinned-binder [name signature]
     `(defn %name [library symbol]
-       (let [function (the %signature
-                           (DynLib.symbol-pinned library symbol))]
-         (if (DynLib.valid-function? &function)
-           (Result.Success (DynLibPinnedFn.init function))
-           (Result.Error (DynLib.typed-error)))))))
+      (let [function (the %signature (DynLib.symbol-pinned library symbol))]
+        (if (DynLib.valid-function? &function)
+          (Result.Success (DynLibPinnedFn.init function))
+          (Result.Error (DynLib.typed-error)))))))
