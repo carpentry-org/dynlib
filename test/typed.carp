@@ -1,4 +1,7 @@
 (load "../dynlib.carp")
+(load "platform.carp")
+(load "Test.carp")
+(use Test)
 
 (DynLib.defbinder bind-owned-floor (Fn [Double] Double))
 (DynLib.defpinned-binder bind-pinned-floor (Fn [Double] Double))
@@ -7,30 +10,63 @@
 (DynLib.defpinned-binder bind-missing (Fn [] ()))
 
 (defn main []
-  (do
-    (match (DynLib.open-owned "libm.so.6")
-      (Result.Error error) (IO.errorln &error)
+  (with-test test
+    (match (DynLib.open-owned (libm-path))
+      (Result.Error error)
+        (assert-true test false &(fmt "open-owned failed: %s" &error))
       (Result.Success library)
         (match (bind-owned-floor library "floor")
-          (Result.Error error) (IO.errorln &error)
+          (Result.Error error)
+            (assert-true test false &(fmt "binding floor failed: %s" &error))
           (Result.Success function)
-            (assert (= 3.0 (DynLibBoundFn.call1 &function 3.9)))))
-    (match (DynLib.open-pinned "libm.so.6")
-      (Result.Error error) (IO.errorln &error)
+            (assert-equal test
+              3.0
+              (DynLibBoundFn.call1 &function 3.9)
+              "owned binding calls floor")))
+
+    (match (DynLib.open-pinned (libm-path))
+      (Result.Error error)
+        (assert-true test false &(fmt "open-pinned failed: %s" &error))
       (Result.Success library)
-        (do
-          (match (bind-pinned-floor &library "floor")
-            (Result.Error error) (IO.errorln &error)
-            (Result.Success function)
-              (assert (= 4.0 (DynLibPinnedFn.call1 &function 4.9))))
-          (match (bind-pinned-ceil &library "ceil")
-            (Result.Error error) (IO.errorln &error)
-            (Result.Success function)
-              (assert (= 6.0 (DynLibPinnedFn.call1 &function 5.1))))
-          (match (bind-pinned-pow &library "pow")
-            (Result.Error error) (IO.errorln &error)
-            (Result.Success function)
-              (assert (= 8.0 (DynLibPinnedFn.call2 &function 2.0 3.0))))
-          (match (bind-missing &library "dynlib_missing_symbol")
-            (Result.Error _) ()
-            (Result.Success _) (assert false))))))
+        (match (bind-pinned-floor &library "floor")
+          (Result.Error error)
+            (assert-true test false &(fmt "binding floor failed: %s" &error))
+          (Result.Success function)
+            (assert-equal test
+              4.0
+              (DynLibPinnedFn.call1 &function 4.9)
+              "pinned binding calls floor")))
+
+    (match (DynLib.open-pinned (libm-path))
+      (Result.Error error)
+        (assert-true test false &(fmt "open-pinned failed: %s" &error))
+      (Result.Success library)
+        (match (bind-pinned-ceil &library "ceil")
+          (Result.Error error)
+            (assert-true test false &(fmt "binding ceil failed: %s" &error))
+          (Result.Success function)
+            (assert-equal test
+              6.0
+              (DynLibPinnedFn.call1 &function 5.1)
+              "pinned binding calls ceil")))
+
+    (match (DynLib.open-pinned (libm-path))
+      (Result.Error error)
+        (assert-true test false &(fmt "open-pinned failed: %s" &error))
+      (Result.Success library)
+        (match (bind-pinned-pow &library "pow")
+          (Result.Error error)
+            (assert-true test false &(fmt "binding pow failed: %s" &error))
+          (Result.Success function)
+            (assert-equal test
+              8.0
+              (DynLibPinnedFn.call2 &function 2.0 3.0)
+              "pinned binding calls pow")))
+
+    (match (DynLib.open-pinned (libm-path))
+      (Result.Error error)
+        (assert-true test false &(fmt "open-pinned failed: %s" &error))
+      (Result.Success library)
+        (assert-true test
+          (Result.error? &(bind-missing &library "dynlib_missing_symbol"))
+          "binding a missing symbol fails"))))
