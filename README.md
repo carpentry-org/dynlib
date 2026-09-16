@@ -13,7 +13,7 @@ pinned or owned library:
 (DynLib.defpinned-binder bind-floor (Fn [Double] Double))
 
 (defn main []
-  ; the math symbols live in different libraries per platform: glibc keeps
+  ; nb: the math symbols live in different libraries per platform: glibc keeps
   ; them in libm.so.6, macos in /usr/lib/libSystem.B.dylib
   (match (DynLib.open-pinned "libm.so.6")
     (Result.Error error) (IO.errorln &error)
