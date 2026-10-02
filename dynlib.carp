@@ -53,12 +53,77 @@ a `Result` with the function on success, or the `dlerror` message on failure.")
     (let [f (dlsym lib (cstr fname))]
       (if (valid? f) (Result.Success @f) (Result.Error (dlerror)))))
 
+  (private mangle-char)
+  (hidden mangle-char)
+  (defn mangle-char [c]
+    (let [code (Char.to-int @c)]
+      (cond
+        (= @c \+) @"_PLUS_"
+        (= @c \-) @"_MINUS_"
+        (= @c \*) @"_MUL_"
+        (= @c \/) @"_DIV_"
+        (= @c \<) @"_LT_"
+        (= @c \>) @"_GT_"
+        (= @c \?) @"_QMARK_"
+        (= @c \!) @"_BANG_"
+        (= @c \=) @"_EQ_"
+        (< code 128) (Char.str @c)
+        (fmt "_U%dU_" code))))
+
+  (private mangle-segment)
+  (hidden mangle-segment)
+  (defn mangle-segment [segment]
+    (let [chars (String.chars segment)
+          escaped (String.concat &(Array.copy-map &mangle-char &chars))]
+      (cond
+        (= &escaped "auto") @"_AUTO_"
+        (= &escaped "break") @"_BREAK_"
+        (= &escaped "case") @"_CASE_"
+        (= &escaped "const") @"_CONST_"
+        (= &escaped "char") @"_CHAR_"
+        (= &escaped "continue") @"_CONTINUE_"
+        (= &escaped "default") @"_DEFAULT_"
+        (= &escaped "do") @"_DO_"
+        (= &escaped "double") @"_DOUBLE_"
+        (= &escaped "else") @"_ELSE_"
+        (= &escaped "enum") @"_ENUM_"
+        (= &escaped "extern") @"_EXTERN"
+        (= &escaped "float") @"_FLOAT_"
+        (= &escaped "for") @"_FOR"
+        (= &escaped "goto") @"_GOTO_"
+        (= &escaped "if") @"_IF_"
+        (= &escaped "int") @"_INT_"
+        (= &escaped "long") @"_LONG_"
+        (= &escaped "register") @"_REGISTER_"
+        (= &escaped "return") @"_RETURN_"
+        (= &escaped "short") @"_SHORT_"
+        (= &escaped "signed") @"_SIGNED_"
+        (= &escaped "sizeof") @"_SIZEOF_"
+        (= &escaped "static") @"_STATIC_"
+        (= &escaped "struct") @"_STRUCT_"
+        (= &escaped "switch") @"_SWITCH_"
+        (= &escaped "typedef") @"_TYPEDEF_"
+        (= &escaped "union") @"_UNION_"
+        (= &escaped "unsigned") @"_UNSIGNED_"
+        (= &escaped "volatile") @"_VOLATILE_"
+        (= &escaped "void") @"_VOID_"
+        (= &escaped "while") @"_WHILE_"
+        escaped)))
+
+  (hidden mangle)
+  (defn mangle [md fname]
+    (String.join "_"
+                 &(Array.push-back
+                   (Array.copy-map &mangle-segment &(String.split-by md &[\.]))
+                   (mangle-segment fname))))
+
   (doc get-from-module
     "gets a function named `fname` from a Carp module `md` from inside
-a shared library `lib`. Returns a `Result` with the function on success, or the
-`dlerror` message on failure.")
+a shared library `lib`. Both are Carp names as written in source, such as
+`\"Outer.Inner\"` and `\"valid?\"`, not their mangled C symbols. Returns a
+`Result` with the function on success, or the `dlerror` message on failure.")
   (defn get-from-module [lib md fname]
-    (let [fqn (fmt "%s_%s" &(Pattern.substitute #"\." md "_" -1) fname)
+    (let [fqn (mangle md fname)
           f (dlsym lib (cstr &fqn))]
       (if (valid? f) (Result.Success @f) (Result.Error (dlerror)))))
 
