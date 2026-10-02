@@ -48,4 +48,71 @@
           &(DynLib.close lib)
           "close returns Result.Success on success")
       (Result.Error _)
-        (assert-true test false "close returns Result.Success on success"))))
+        (assert-true test false "close returns Result.Success on success"))
+
+    (assert-equal test
+      "Shared_add"
+      &(DynLib.mangle "Shared" "add")
+      "mangle keeps plain names")
+    (assert-equal test
+      "Shared_my_MINUS_add"
+      &(DynLib.mangle "Shared" "my-add")
+      "mangle escapes dashes")
+    (assert-equal test
+      "M__PLUS__MINUS__MUL__DIV_"
+      &(DynLib.mangle "M" "+-*/")
+      "mangle escapes arithmetic operators")
+    (assert-equal test
+      "M_valid_QMARK_"
+      &(DynLib.mangle "M" "valid?")
+      "mangle escapes predicates")
+    (assert-equal test
+      "M_set_BANG_"
+      &(DynLib.mangle "M" "set!")
+      "mangle escapes bang names")
+    (assert-equal test
+      "M__LT__EQ_"
+      &(DynLib.mangle "M" "<=")
+      "mangle escapes <=")
+    (assert-equal test "M__GT_" &(DynLib.mangle "M" ">") "mangle escapes >")
+    (assert-equal test "M__EQ_" &(DynLib.mangle "M" "=") "mangle escapes =")
+    (assert-equal test
+      "M__DO_"
+      &(DynLib.mangle "M" "do")
+      "mangle replaces reserved words")
+    (assert-equal test
+      "M__FOR"
+      &(DynLib.mangle "M" "for")
+      "mangle replaces for without a trailing underscore")
+    (assert-equal test
+      "M__EXTERN"
+      &(DynLib.mangle "M" "extern")
+      "mangle replaces extern without a trailing underscore")
+    (assert-equal test
+      "M_done"
+      &(DynLib.mangle "M" "done")
+      "mangle keeps reserved words inside longer names")
+    (assert-equal test
+      "M_for_MINUS_each"
+      &(DynLib.mangle "M" "for-each")
+      "mangle keeps reserved word prefixes")
+    (assert-equal test
+      "M_do_BANG_"
+      &(DynLib.mangle "M" "do!")
+      "mangle checks reserved words after escaping")
+    (assert-equal test
+      "Outer_Inner_my_MINUS_add"
+      &(DynLib.mangle "Outer.Inner" "my-add")
+      "mangle joins nested module paths")
+    (assert-equal test
+      "My_MINUS_Mod__INT__x"
+      &(DynLib.mangle "My-Mod.int" "x")
+      "mangle escapes each module segment")
+    (assert-equal test
+      "M_gr_U246U__U223U_e"
+      &(DynLib.mangle "M" "größe")
+      "mangle escapes two-byte codepoints")
+    (assert-equal test
+      "M__U955U__U129408U_"
+      &(DynLib.mangle "M" "λ🦀")
+      "mangle escapes codepoints, not bytes")))
